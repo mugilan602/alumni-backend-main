@@ -50,9 +50,9 @@ const signup = async (req, res) => {
             profileImage,
             linkedIn
         );
-        const userId=user._id
-        const token = createToken(user._id);
-        res.status(200).json({userId,email, token });
+        const userId = user._id
+        // const token = createToken(user._id);
+        res.status(200).json({ userId, email });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -60,7 +60,7 @@ const signup = async (req, res) => {
 
 const updateImageUrl = async (req, res) => {
     const { userId } = req.params;
-    const {profileImage}=req.body;
+    const { profileImage } = req.body;
     try {
         const user = await User.findByIdAndUpdate(userId, { profileImage }, { new: true });
 
@@ -86,17 +86,17 @@ const fetchData = async (req, res) => {
 
 const fetchAlumniByDept = async (req, res) => {
     const { department } = req.params; // Assuming req.body contains the department name
-  
-    try {
-      // Query the User collection to find users matching the specified department
-      const alumniDetails = await User.find({ department});
-  
-      // Respond with a 200 status and JSON array of alumni details
-      res.status(200).json(alumniDetails);
-    } catch (error) {
-      // Handle any errors that occur during the database query
-      res.status(400).json({ error: error.message });
-    }
-  };
 
-module.exports = { login, signup, fetchData,updateImageUrl,fetchAlumniByDept };
+    try {
+        // Query the User collection to find users matching the specified department
+        const alumniDetails = await User.find({ department });
+
+        // Respond with a 200 status and JSON array of alumni details
+        res.status(200).json(alumniDetails);
+    } catch (error) {
+        // Handle any errors that occur during the database query
+        res.status(400).json({ error: error.message });
+    }
+};
+
+module.exports = { login, signup, fetchData, updateImageUrl, fetchAlumniByDept };
