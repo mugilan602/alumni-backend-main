@@ -4,19 +4,20 @@ const User = require("../models/users");
 
 const createJob = async (req, res) => {
     const userId = req.user._id;
-    const { title, company, pay, experience, appliedBy } = req.body;
-    
+    const { title, company, pay, location, domain, appliedBy } = req.body;
+
     try {
         // Create the job
         const job = await Job.create({
             title,
             company,
             pay,
-            experience,
+            location,
             appliedBy,
-            userId
+            userId,
+            domain
         });
-        
+
         const jobId = job._id;
 
         // Update the user with the jobId
@@ -30,21 +31,30 @@ const createJob = async (req, res) => {
 
 const getJobs = async (req, res) => {
     try {
-        // Fetch all jobs from the database and populate student and user details
-        const jobs = await Job.find()
-        .populate({
-            path: 'appliedBy',
-            model: 'Student'
-        })
-        .populate({
-            path: 'userId',
-            model: 'User'
-        })
-        .exec();
+        // Extract the domain from query parameters
+        const { domain } = req.query;
 
-        // If there are no jobs, send an appropriate response
+        // Set up the query to fetch jobs
+        let query = {};
+        if (domain) {
+            query = { domain }; // Filter by domain if it's provided
+        }
+
+        // Fetch jobs from the database based on the query and populate student and user details
+        const jobs = await Job.find(query)
+            .populate({
+                path: 'appliedBy',
+                model: 'Student'
+            })
+            .populate({
+                path: 'userId',
+                model: 'User'
+            })
+            .exec();
+
+        // If no jobs are found, send an appropriate response
         if (!jobs || jobs.length === 0) {
-            return res.status(404).json({ message: 'No jobs found' });
+            return res.status(404).json({ message: 'No jobs found for the selected domain' });
         }
 
         // Send the jobs as a response
@@ -54,6 +64,7 @@ const getJobs = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
 
 const getJobById = async (req, res) => {
     const { jobId } = req.params; // Extract jobId from req.params
@@ -79,12 +90,16 @@ const getJobById = async (req, res) => {
     }
 };
 
-
 const apply = async (req, res) => {
     const { jobId } = req.params;
-    const { name, email, phoneNumber, resume } = req.body;
+    const { name, email, phoneNumber, resume, department, studentId } = req.body;
 
     try {
+        // Validate required fields
+        if (!name || !email || !phoneNumber || !resume || !department || !studentId) {
+            return res.status(400).json({ error: 'All fields are required.' });
+        }
+
         // Find the student by email
         let student = await Student.findOne({ email });
 
@@ -94,7 +109,9 @@ const apply = async (req, res) => {
                 name,
                 email,
                 phoneNumber,
-                resume,
+                resume, // This should be a URL or path to the resume file
+                department,
+                studentId,
                 jobIds: [jobId] // Initialize jobIds array with the provided jobId
             });
             await student.save();
@@ -115,4 +132,5 @@ const apply = async (req, res) => {
     }
 };
 
-module.exports = { createJob, apply ,getJobs,getJobById};
+
+module.exports = { createJob, apply, getJobs, getJobById };

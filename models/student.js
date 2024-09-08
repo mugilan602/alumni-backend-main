@@ -12,11 +12,19 @@ const studentSchema = new Schema({
         unique: true
     },
     phoneNumber: {
-        type: Number, // Assuming phoneNumber is a numeric value
+        type: String, // Changed to String to handle various phone number formats
         required: true
     },
     resume: {
         type: String,
+        required: true
+    },
+    department: {
+        type: String,
+        required: true
+    },
+    studentId: {
+        type: String, // Assuming studentId is a string (adjust if needed)
         required: true
     },
     jobIds: [{

@@ -14,13 +14,17 @@ const jobSchema = new Schema({
         type: String, // Assuming pay is a numeric value
         required: true
     },
-    experience: {
+    location: {
         type: String,
         required: true
     },
+    domain: {
+        type: String, // Adding domain as a string
+        required: true // Set to true if domain is mandatory; otherwise, set to false
+    },
     appliedBy: [{
         type: Schema.Types.ObjectId, // Array of ObjectId
-        ref: 'Student' // Assuming there is a User model
+        ref: 'Student' // Assuming there is a Student model
     }],
     userId: {
         type: Schema.Types.ObjectId, // Referencing the ObjectId type

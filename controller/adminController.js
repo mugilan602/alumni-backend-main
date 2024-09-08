@@ -65,12 +65,25 @@ const authorizeUser = async (req, res) => {
 
 const authorizedUser = async (req, res) => {
     try {
-        const users = await User.find({ isAuthorized: 'authorized' });
+        // Extract the department from the query parameters
+        const { department } = req.query;
+
+        // Build the query object dynamically
+        const query = { isAuthorized: 'authorized' };
+
+        // If a department is provided, add it to the query object
+        if (department) {
+            query.department = department;
+        }
+
+        // Fetch users based on the query
+        const users = await User.find(query);
 
         if (!users.length) {
             return res.status(404).json({ error: 'No authorized users found' });
         }
 
+        // Respond with the found users
         res.status(200).json({ users });
     } catch (error) {
         console.error('Error fetching authorized users:', error);
@@ -78,25 +91,43 @@ const authorizedUser = async (req, res) => {
     }
 };
 
-
 const unAuthorizedUser = async (req, res) => {
     try {
-        const users = await User.find({ isAuthorized: 'not authorized' });
+        // Extract the department from the query parameters
+        const { department } = req.query;
+
+        // Build the query object dynamically
+        const query = { isAuthorized: 'not authorized' };
+
+        // If a department is provided, add it to the query object
+        if (department) {
+            query.department = department;
+        }
+
+        // Fetch users based on the query
+        const users = await User.find(query);
 
         if (!users.length) {
             return res.status(404).json({ error: 'No unauthorized users found' });
         }
 
+        // Respond with the found users
         res.status(200).json({ users });
     } catch (error) {
         console.error('Error fetching unauthorized users:', error);
         res.status(500).json({ error: 'Server error' });
     }
 };
+
+
 const getJobCount = async (req, res) => {
     try {
-        // Count all jobs in the database
-        const jobCount = await Job.countDocuments();
+        const { department } = req.query; // Get department from query parameters
+
+        // If department is provided, filter jobs by department
+        const jobCount = department
+            ? await Job.countDocuments({ department })
+            : await Job.countDocuments(); // Count all jobs if no department is passed
 
         // Send the count as a response
         res.status(200).json({ jobCount });
@@ -105,10 +136,15 @@ const getJobCount = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
 const getUnAuthorizedAlumniCount = async (req, res) => {
     try {
-        // Count all authorized alumni in the database
-        const unauthorizedCount = await User.countDocuments({ isAuthorized: 'not authorized' });
+        const { department } = req.query; // Get department from query parameters
+
+        // If department is provided, filter by department and unauthorized status
+        const unauthorizedCount = department
+            ? await User.countDocuments({ department, isAuthorized: 'not authorized' })
+            : await User.countDocuments({ isAuthorized: 'not authorized' }); // Count all unauthorized if no department is passed
 
         // Send the count as a response
         res.status(200).json({ unauthorizedCount });
@@ -118,10 +154,15 @@ const getUnAuthorizedAlumniCount = async (req, res) => {
     }
 };
 
+
 const getAppliedStudentsCount = async (req, res) => {
     try {
-        // Count all students in the database
-        const studentsCount = await Student.countDocuments();
+        const { department } = req.query; // Get department from query parameters
+
+        // If department is provided, filter students by department
+        const studentsCount = department
+            ? await Student.countDocuments({ department })
+            : await Student.countDocuments(); // Count all students if no department is passed
 
         // Check if studentsCount is greater than zero
         if (studentsCount > 0) {
@@ -138,10 +179,16 @@ const getAppliedStudentsCount = async (req, res) => {
 };
 
 
+
 const getAllAppliedStudents = async (req, res) => {
+    const { department } = req.query; // Extract department from query parameters
+
     try {
-        // Fetch all students and populate jobIds and userId fields
-        const students = await Student.find()
+        // Build query based on whether department is provided
+        const query = department ? { department } : {};
+
+        // Fetch students with jobIds and userId populated
+        const students = await Student.find(query)
             .populate({
                 path: 'jobIds', // Populating the jobIds field
                 populate: {
@@ -162,6 +209,7 @@ const getAllAppliedStudents = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
 
 module.exports = {
     login, signup, authorizeUser, authorizedUser, unAuthorizedUser, getJobCount, getAllAppliedStudents, getUnAuthorizedAlumniCount, getAppliedStudentsCount
